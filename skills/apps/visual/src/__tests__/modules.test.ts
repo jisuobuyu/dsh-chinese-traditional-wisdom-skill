@@ -184,3 +184,32 @@ describe('XuanOrbitLogo', () => {
     expect(source).not.toContain('>玄<');
   });
 });
+describe('User presentation typed semantic boundary', () => {
+  it('keeps free-text tone inference out of the production user-presentation path', () => {
+    const source = readSource('legacy/reportLayers.ts');
+    const userPresentation = source.slice(source.indexOf('export function toUserPresentation'), source.indexOf('// ─── 专项解读模式'));
+
+    expect(userPresentation).toContain('createNeutralTypedPresentation');
+    expect(userPresentation).not.toContain('toFourLayer(snapshot)');
+    expect(userPresentation).not.toContain('toSemanticReport(snapshot');
+  });
+
+  it('keeps Feixing and Almanac on explicit structured rendering rather than text inference', () => {
+    const feixing = readSource('features/feixing/FeixingWorkspace.tsx');
+    const almanac = readSource('features/almanac/AlmanacWorkspace.tsx');
+    expect(feixing).not.toContain('toFourLayer');
+    expect(almanac).not.toContain('toFourLayer');
+    expect(feixing).toContain('gridRemedies');
+    expect(almanac).toContain('almanac.dayGanZhi');
+  });
+});
+describe('CLI explicit-time boundary', () => {
+  it('keeps Dashboard convenience outside the public CLI contract', () => {
+    const combo = readSource('features/combo/ComboWorkspace.tsx');
+    const contracts = readSource('legacy/toolContracts.ts');
+    expect(combo).toContain('currentMonth: new Date().getMonth() + 1');
+    expect(combo).toContain('calcSpaceTimeCombo({ birth: birthInput, targetYear, solar })');
+    expect(contracts).toContain("const targetYear = year(input.year, 'year')");
+    expect(contracts).toContain("targetYear: year(input.targetYear, 'targetYear')");
+  });
+});

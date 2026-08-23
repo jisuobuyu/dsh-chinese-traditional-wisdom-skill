@@ -14,6 +14,10 @@
 </p>
 
 <p align="center">
+  Stable release: <strong>v1.0.0</strong> · <a href="CHANGELOG.md">Changelog</a> · <a href="https://github.com/dhicoc/chinese-traditional-wisdom-skill/releases/tag/v1.0.0">Release Notes</a>
+</p>
+
+<p align="center">
   <a href="#能做什么">能做什么</a> ·
   <a href="#开始使用">开始使用</a> ·
   <a href="#准备哪些信息">准备哪些信息</a> ·
@@ -81,8 +85,8 @@ Dashboard 当前提供以下 **24 个工作区**；其中计算型页面直接�
 | 堪舆风水 | 八宅大游年 | 命卦、宅卦、东/西四命与游年结构参考 |
 | 综合参考 | 联合分析 | 年度、月度、决策、空间时间、三式、择日、合婚与日常调养等组合入口 |
 | 健康文化参考 | 体质辨识 | 九种体质问卷评分、雷达图与调养提示；不替代医疗服务 |
-| 知识与数据 | 古籍阅读 | 《八宅明镜》原文、映射说明、关键词搜索与高亮 |
-| 知识与数据 | 本地历史与收藏 | 本地保存最近 30 条脱敏摘要、收藏、删除与隐私说明 |
+| 知识与数据 | 古籍阅读 | 30 篇本地典籍书库，以及文王六十四卦卦序、矩阵、爻形定位、原文和错综互变关系 |
+| 知识与数据 | 本地历史与收藏 | 默认不保存；保存前预览，支持脱敏摘要、自动过期、一键清空和可复核结果包导入/导出 |
 | 开发与验证 | 测试控制台 | 查看本地测试注册项与开发验证信息 |
 
 Dashboard 还提供：全局生辰资料管理、真太阳时核验/民用时间降级状态、命令面板导航、页面摘要复制、结构化报告导出，以及本地历史记录。
@@ -95,9 +99,24 @@ Dashboard 还提供：全局生辰资料管理、真太阳时核验/民用时间
 
 适合希望浏览盘面、修改输入并查看可视化结果的用户。
 
+完整安装会同时安装 TypeScript 权威运行时和 Python 离线交叉验证依赖：
+
+```powershell
+scripts\setup.bat
+pnpm dev
+```
+
+Linux/macOS：
+
+```bash
+./scripts/setup.sh
+pnpm dev
+```
+
+也可只在已经完成依赖安装的环境中直接进入 Dashboard：
+
 ```bash
 cd apps/visual
-pnpm install --frozen-lockfile
 pnpm dev
 ```
 
@@ -168,6 +187,30 @@ pnpm install --frozen-lockfile
 pnpm engine <tool> <input-json-file>
 ```
 
+需要比较明确规则配置时，可运行：
+
+```bash
+pnpm engine:compare-rules src/__fixtures__/analysis/rule-comparison-bazi.success.json
+```
+
+`engine:compare-rules` 是 32 工具之外的独立只读分析入口，只比较结构化字段并列出每个规则来源，不推荐或裁定某一流派。
+
+查询《周易》六十四卦时，可按编号、卦名、上下卦或六爻结构调用：
+
+```bash
+pnpm engine:iching-lookup src/__fixtures__/analysis/iching-lookup.success.json
+```
+
+`engine:iching-lookup` 同样不增加 registry 工具数；它只返回本地规范卦序、原文、错综互卦和显式动爻所成变卦，不由模型自行换算。
+
+在尚未确定工具和参数时，可先运行只读规划器：
+
+```bash
+pnpm engine:plan --query "想看今年事业"
+```
+
+规划器不排盘、不计算，也不回显原始咨询内容；它只列出候选工具、缺失字段、风险提示和建议深度。输入方式和输出字段见 `tool-index.md`。
+
 除 `resolve_true_solar_time` 直接返回 `TrueSolarTimeResolution` 外，CLI 返回 JSON `ToolEnvelope`。呈现确定性事实前，应只从本次 `ToolEnvelope.data` 提取结构化 claims，再调用对应本地 `validate*Claims(data, claims)` 核验；该校验不能验证自由文本、传统解释、建议或预测。
 
 标准 success fixture、所有工具名与 CLI 示例见 [tool-index.md](tool-index.md)。
@@ -180,9 +223,16 @@ pnpm engine <tool> <input-json-file>
 | [RULES.md](RULES.md) | 伦理、隐私、健康与输入完整性边界 |
 | [README_AI.md](README_AI.md) | AI Agent 的本地调用说明与故障处理 |
 | [tool-index.md](tool-index.md) | 32 个本地工具、标准 fixture 与 CLI 参考 |
-| [发布前验证与故障排查](docs/RELEASE-VERIFICATION.md) | 新环境安装、质量门、四浏览器回归与失败产物定位 |
+| [skill-evals/README.md](skill-evals/README.md) | 19 项本地 Skill 行为契约与 `pnpm eval:skill` 使用说明 |
+| [v1.0.0 Release](https://github.com/dhicoc/chinese-traditional-wisdom-skill/releases/tag/v1.0.0) | 安装包、Release Notes、Manifest 与 SHA256SUMS |
 | [`bootstrap/`](bootstrap/) | 八字、紫微、六爻、梅花、风水等领域的详细说明 |
 | [`apps/visual/`](apps/visual/) | Dashboard、纯 TypeScript 引擎与测试 |
+| [knowledge-base/manifest.generated.json](knowledge-base/manifest.generated.json) | 古籍、映射与 reference 的稳定 ID、来源状态、许可证状态和 SHA-256 校验 |
+| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | 运行库与捆绑数据集的来源和发布治理要求 |
+
+### 本地数据分片与性能预算
+
+大型字义、古籍全文索引和解梦全量库均由源数据生成分片：字义 32 片、全文索引 4 片、解梦 22 片。`pnpm check:bundle-budget` 在生产构建后检查首屏、gzip chunk、分片源文件和已移除的 12MB 公共单文件，CI 不通过提高 Vite 告警阈值掩盖回归。
 
 ### 开发验证
 
@@ -197,7 +247,7 @@ pnpm build
 pnpm test:e2e
 ```
 
-文档契约检查会确保公开工具清单、CLI、fixture 和关键使用约定保持一致。仅修改文档时，至少运行文档契约检查与 `git diff --check`；完整命令顺序、四浏览器准备和失败产物定位见[发布前验证与故障排查](docs/RELEASE-VERIFICATION.md)。
+文档契约检查会确保公开工具清单、CLI、fixture 和关键使用约定保持一致。仅修改文档时，至少运行文档契约检查与 `git diff --check`；完整质量门以根 `package.json`、`.github/workflows/ci.yml` 和 `tool-index.md` 为准。
 
 ## 仓库结构
 

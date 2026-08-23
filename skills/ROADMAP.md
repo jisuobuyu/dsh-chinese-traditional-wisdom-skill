@@ -1,5 +1,6 @@
 # ROADMAP.md — 本地直调 Skill 主路线图
 
+> **当前状态：** v1.0.0 已正式发布；后续以本路线图、CHANGELOG、Skill eval 与 GitHub Release 维护下一版。
 ## 方向与不变边界
 
 本项目的唯一运行模型是本地、一次性、可复核的 Skill 调用：
@@ -18,7 +19,7 @@ Dashboard 是独立的浏览器端入口，按页面直接调用纯 TypeScript �
 - 真太阳时通过 `resolve_true_solar_time` 接收已外部核验的地点与历史时区证据，并生成 `trueSolarBirth`、`trueSolarResolution`；无法核验时必须明确“未完成真太阳时复核”的民用时间 fallback。
 - 项目保持离线优先、无账户、无远程服务端状态，也不新增协议适配层或 token 校验机制。
 
-技术实施细则见 [`docs/RESEARCH-ROADMAP.md`](docs/RESEARCH-ROADMAP.md)；架构决策历史见 [`EVOLUTION.md`](EVOLUTION.md)。
+架构决策历史见 [`EVOLUTION.md`](EVOLUTION.md)，发布变化见 [`CHANGELOG.md`](CHANGELOG.md)。
 
 ## 当前完成基线
 
@@ -27,6 +28,11 @@ Dashboard 是独立的浏览器端入口，按页面直接调用纯 TypeScript �
 - 八字、紫微、八宅、飞星、历法、占测、日用与联合分析均有无状态 `validate*Claims(data, claims)` 校验入口；所有校验器共享 violation 契约，并统一区分值不一致、选择器不存在与跨工具凭证。
 - CLI 工具表、Runner 分发、success fixture、真太阳时民用降级、P9 风水/历法口径与 6 个风水映射表已接入契约检查；Dashboard 交互与报告隐私仍由对应测试覆盖。
 - CI 覆盖类型检查、单元测试、烟测、文档/数据契约和生产构建；跨浏览器 E2E 是发布前的完整验证层。
+- 规则差异实验室支持八字神煞、称骨、大六壬、太乙、已核验时间基准与紫微动态口径，只比较已校验结构化字段并逐变体列出规则来源；独立 CLI 不改变 32 工具 registry。
+- Agent 参数规划器复用模块路由和 32 工具 descriptor，只输出候选、缺失字段、风险提示与建议深度；不调用 Runner、不读取系统日期、不回显原始 query。
+- 周易六十四卦已形成独立本地知识切片：文王卦序、8×8 上下卦矩阵、六爻定位、卦辞/爻辞/彖传、错综互变关系、六爻/梅花联动及 `engine:iching-lookup`；不增加 32 工具 registry。
+- 本地历史改为显式 opt-in：保存前预览，支持过期、一键清空与隐私安全结果包导入/导出；完整输入和原始问题始终不持久化。
+- Skill 行为评测 20/20 已接入 CI，覆盖路由、缺参、claims、reference 边界、隐私和产品跳过决定。
 
 ## 近期：输入与引擎契约
 

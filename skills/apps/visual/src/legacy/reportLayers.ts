@@ -49,6 +49,31 @@ export interface Action {
   category: ActionCategory;
 }
 
+export interface TypedSemanticPresentation {
+  summary: string;
+  overallTone: Tone;
+  highlights: Highlight[];
+  details: ReadingSection[];
+  actions: Action[];
+  limitations: string[];
+  disclaimers: string[];
+  tags?: string[];
+}
+export function createNeutralTypedPresentation(
+  reading: ReadingLike,
+  disclaimers: string[] = [],
+): TypedSemanticPresentation {
+  return {
+    summary: reading.summary,
+    overallTone: '中',
+    highlights: [],
+    details: reading.sections.map((section) => ({ heading: section.heading, body: section.body })),
+    actions: [],
+    limitations: [],
+    disclaimers,
+    tags: reading.tags,
+  };
+}
 export interface LayerReport {
   /** 第一层：一句话总结 + 总体吉凶定调 */
   tldr: string;
@@ -254,13 +279,14 @@ export function toUserWarnings(values: unknown[]): string[] {
 
 /**
  * 将 ToolEnvelope 收束为用户可见呈现模型。
- * 正文只取 export_snapshot；计算状态与 warnings 单独保留；内部 evidence、result_meta 与 sourceNotes 不进入导出内容。
+ * 正文只取 export_snapshot；默认转换为中性的类型化语义，禁止从自由文本反推吉凶或行动类别。计算状态与 warnings 单独保留；内部 evidence、result_meta 与 sourceNotes 不进入导出内容。
  */
 export function toUserPresentation(
   envelope: EnvelopeLike,
   semanticOptions: {
     factChecks?: StructuredFactCheck[];
     disclaimers?: string[];
+    typedPresentation?: TypedSemanticPresentation;
   } = {},
 ): UserPresentation {
   if (!envelope.ok) {
@@ -283,12 +309,30 @@ export function toUserPresentation(
 
   const snapshot = envelope.data?.export_snapshot;
   const timeSourceNotice = envelope.data?.timeSource?.notice;
+  const typed = semanticOptions.typedPresentation ?? (snapshot ? createNeutralTypedPresentation(snapshot, semanticOptions.disclaimers) : undefined);
+  const report: LayerReport | null = typed ? {
+    tldr: typed.summary,
+    overallTone: typed.overallTone,
+    highlights: typed.highlights,
+    details: typed.details,
+    actions: typed.actions,
+    tags: typed.tags,
+  } : null;
+  const semanticReport: SemanticReport | null = typed ? {
+    facts: (semanticOptions.factChecks ?? []).filter(({ validation }) => validation.valid).map(({ fact }) => fact),
+    traditionalInterpretations: [
+      ...typed.highlights.map(({ label, value }) => ({ heading: label, body: value })),
+      ...typed.details,
+    ],
+    actions: typed.actions,
+    disclaimers: uniqueText([...typed.disclaimers, ...(semanticOptions.disclaimers ?? [])]),
+  } : null;
   return {
     state: 'success',
-    report: snapshot ? toFourLayer(snapshot) : null,
-    semanticReport: snapshot ? toSemanticReport(snapshot, semanticOptions) : null,
-    exportReport: snapshot ? { summary: snapshot.summary, sections: snapshot.sections } : null,
-    notices: uniqueText([timeSourceNotice]),
+    report,
+    semanticReport,
+    exportReport: snapshot ? { summary: typed?.summary ?? snapshot.summary, sections: snapshot.sections } : null,
+    notices: uniqueText([timeSourceNotice, ...(typed?.limitations ?? [])]),
     warnings: toUserWarnings(Array.isArray(envelope.warnings) ? envelope.warnings : []),
   };
 }

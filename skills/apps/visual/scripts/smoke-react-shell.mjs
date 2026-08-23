@@ -304,8 +304,8 @@ if (exists(readerPath)) {
   const readerCanvasCount = countOccurrences(readerWorkspace, '<CanvasPanel');
   check(readerCanvasCount === 0, `#reader 不应使用 CanvasPanel，实际出现 ${readerCanvasCount} 次`);
   check(
-    readerWorkspace.includes('TEXT_PAIRS'),
-    'AncientTextSplitReader 应内置 TEXT_PAIRS 文本对数据',
+    readerWorkspace.includes('BAZHAI_GUIDES') && readerWorkspace.includes('listKnowledgeBaseEntries'),
+    'AncientTextSplitReader 应提供馆藏书目与面向读者的阅读导览',
   );
   check(
     readerWorkspace.includes('?raw'),
@@ -320,9 +320,10 @@ if (exists(readerPath)) {
     'AncientTextSplitReader 不应加载或展示内部映射字段与文件名',
   );
   check(
-    readerWorkspace.includes('renderMarkdownLite') && !readerWorkspace.includes('highlightJson'),
-    'AncientTextSplitReader 应仅渲染古籍原文，不展示原始映射数据',
+    readerWorkspace.includes('renderReaderMarkdown') && !readerWorkspace.includes('highlightJson'),
+    'AncientTextSplitReader 应通过安全阅读排版渲染古籍原文，不展示原始映射数据',
   );
+  check(readerWorkspace.includes('IchingLibrary'), 'AncientTextSplitReader 应接入周易六十四卦完整阅读模式');
   check(readerWorkspace.includes('READER_SEARCH_INTENT_EVENT'), 'AncientTextSplitReader 应监听古籍搜索 intent');
   check(readerWorkspace.includes('setSearchTerm'), 'AncientTextSplitReader 应可通过快捷命令更新搜索词');
 }
@@ -540,7 +541,7 @@ if (exists(commandIntentsPath)) {
   check(commandIntents.includes('CommandHistoryEntry'), 'commandIntents 应定义命令历史条目类型');
 }
 
-check(commandBar.includes('recordCommandHistory'), 'CommandBar 应记录命令执行历史');
+check(commandBar.includes('prepareCommandHistory') && commandBar.includes('history-save-preview'), 'CommandBar 应在保存前展示脱敏历史预览');
 check(commandBar.includes('listCommandHistory'), 'CommandBar 应支持历史重放动态项');
 check(commandBar.includes('history-'), 'CommandBar 历史重放项应有稳定 id 前缀');
 
